@@ -1,26 +1,27 @@
 //
-//  ScriptPairing.swift v1
+//  ScriptPairing.swift v2
 //  ScriptSpinnah
 //
 //  Created by Shawn Starbird on 6/23/25.
 //
-//  Defines a struct that stores a pairing between a folder and a script.
-//  Used to manage which script should run against which user-selected folder.
-//  Conforms to Codable for persistence via UserDefaults or JSON.
+//  CS-143: Add bookmark-based script/folder pairing model
+//
+//  Represents a pairing between a shell script and a target folder.
+//  Stores script name, folder path, and bookmark data for the script.
 //
 
 import Foundation
 
 struct ScriptPairing: Identifiable, Codable, Equatable {
-    var id: UUID = UUID()
-    var folderPath: String       // Absolute path to the folder
-    var scriptPath: String       // Absolute path to the script
+    let id: UUID
+    var scriptName: String
+    var folderPath: String
+    var scriptBookmarkData: Data
 
-    var folderName: String {
-        URL(fileURLWithPath: folderPath).lastPathComponent
-    }
-
-    var scriptName: String {
-        URL(fileURLWithPath: scriptPath).lastPathComponent
+    init(scriptName: String, folderPath: String, scriptBookmarkData: Data) {
+        self.id = UUID()
+        self.scriptName = scriptName
+        self.folderPath = folderPath
+        self.scriptBookmarkData = scriptBookmarkData
     }
 }

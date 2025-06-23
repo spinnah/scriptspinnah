@@ -1,52 +1,65 @@
 //
-//  ScriptSpinnahMenu.swift v1
+//  ScriptSpinnahMenu.swift v2
 //  ScriptSpinnah
 //
 //  Created by Shawn Starbird on 6/23/25.
 //
-//  Menu bar dropdown for ScriptSpinnah, rendered from MenuBarExtra.
-//  Handles script execution and opening the Settings window.
+//  CS-143: Wire menu items to run the correct script for each configured folder
 //
-//  CS-142: Connect static menu actions to script runner.
+//  Renders the dynamic menubar dropdown with script/folder pairings.
+//  Runs each script via security-scoped bookmark resolution.
 //
 
 import SwiftUI
 import Combine
 
-// ObservableObject to hold the shared script URL context
-class ScriptContext: ObservableObject {
-    @Published var grantedScriptURL: URL?
-}
-
 struct ScriptSpinnahMenu: View {
+    @EnvironmentObject var pairingStore: ScriptPairingStore
     @Environment(\.openWindow) private var openWindow
-    @EnvironmentObject var scriptContext: ScriptContext
 
     var body: some View {
         VStack {
-            Button("Run Example Script") {
-                guard let scriptURL = scriptContext.grantedScriptURL else {
-                    print("⚠️ No script URL has been granted via SettingsView.")
-                    return
-                }
-                if scriptURL.startAccessingSecurityScopedResource() {
-                    defer { scriptURL.stopAccessingSecurityScopedResource() }
-                    let folder = "/Users/shawnstarbird/Documents/GitHub/ScriptSpinnah/TestData/TestFolder"
-                    ScriptExecutor.run(scriptURL: scriptURL, with: folder)
-                } else {
-                    print("❌ Failed to access security-scoped resource")
+            if pairingStore.pairings.isEmpty {
+                Text("No script pairings yet")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(pairingStore.pairings) { pairing in
+                    Button(pairing.scriptName) {
+                        run(pairing: pairing)
+                    }
                 }
             }
 
             Divider()
 
-            Button("Settings…") {
-                openWindow(id: "settings")
+            Button("Open Settings") {
+                openWindow(id: "Settings")
             }
 
             Button("Quit") {
                 NSApplication.shared.terminate(nil)
             }
+        }
+        .padding(8)
+    }
+
+    private func run(pairing: ScriptPairing) {
+        do {
+            var isStale = false
+            let scriptURL = try URL(
+                resolvingBookmarkData: pairing.scriptBookmarkData,
+                options: [.withSecurityScope],
+                bookmarkDataIsStale: &isStale
+            )
+
+            if scriptURL.startAccessingSecurityScopedResource() {
+                defer { scriptURL.stopAccessingSecurityScopedResource() }
+                ScriptExecutor.run(scriptURL: scriptURL, with: pairing.folderPath)
+            } else {
+                print("❌ Failed to access secure bookmark for \(pairing.scriptName)")
+            }
+        } catch {
+            print("❌ Failed to resolve bookmark for \(pairing.scriptName): \(error)")
         }
     }
 }

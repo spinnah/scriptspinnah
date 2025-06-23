@@ -13,17 +13,17 @@ import SwiftUI
 
 @main
 struct ScriptSpinnahApp: App {
-    @StateObject private var scriptContext = ScriptContext()
+    @StateObject private var pairingStore = ScriptPairingStore()
     
     var body: some Scene {
         MenuBarExtra("ScriptSpinnah", image: "spiderweb") {
             ScriptSpinnahMenu()
-                .environmentObject(scriptContext)
+                .environmentObject(pairingStore)
         }
 
-        Window("Settings", id: "settings") {
+        Window("Settings", id: "Settings") {
             SettingsView()
-                .environmentObject(scriptContext)
+                .environmentObject(pairingStore)
         }
         .defaultSize(width: 420, height: 360)
         .handlesExternalEvents(matching: ["settings"])

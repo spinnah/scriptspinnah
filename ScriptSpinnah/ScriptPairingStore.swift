@@ -20,8 +20,12 @@ class ScriptPairingStore: ObservableObject {
         load()
     }
 
-    func add(folderPath: String, scriptPath: String) {
-        let newPairing = ScriptPairing(folderPath: folderPath, scriptPath: scriptPath)
+    func add(scriptName: String, folderPath: String, scriptBookmarkData: Data) {
+        let newPairing = ScriptPairing(
+            scriptName: scriptName,
+            folderPath: folderPath,
+            scriptBookmarkData: scriptBookmarkData
+        )
         pairings.append(newPairing)
         save()
     }

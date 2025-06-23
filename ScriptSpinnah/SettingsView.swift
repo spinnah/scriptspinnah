@@ -1,105 +1,163 @@
 //
-//  SettingsView.swift v2
+//  SettingsView.swift v3
 //  ScriptSpinnah
 //
 //  Created by Shawn Starbird on 6/23/25.
 //
-//  Provides a basic UI to view, add, and remove folder+script pairings.
-//  Each pairing links a user-selected folder with a shell script to run.
+//  CS-143: Add pairing UI with script bookmark storage and dynamic list rendering
+//
+//  This view allows users to pair a shell script with a folder.
+//  It persists a security-scoped bookmark for the script and lists all current pairings.
 //
 
 import SwiftUI
 import UniformTypeIdentifiers
-import Combine
+import AppKit
 
 struct SettingsView: View {
-    @StateObject private var store = ScriptPairingStore()
-    @EnvironmentObject var scriptContext: ScriptContext
+    @EnvironmentObject var pairingStore: ScriptPairingStore
 
-    @State private var selectedFolder: URL?
-    @State private var selectedScript: URL?
-
+    @State private var showingScriptImporter = false
     @State private var showingFolderPicker = false
-    @State private var showingScriptPicker = false
-    @State private var isImportingScript = false
+
+    @State private var selectedFolderPath: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Script Pairings")
-                .font(.title2)
-                .padding(.bottom, 4)
+                .font(.title2.bold())
 
-            List {
-                ForEach(store.pairings) { pairing in
-                    VStack(alignment: .leading) {
-                        Text(pairing.folderName)
-                            .font(.headline)
-                        Text("→ \(pairing.scriptName)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+            if pairingStore.pairings.isEmpty {
+                Text("No pairings yet. Add one below.")
+                    .foregroundStyle(.secondary)
+            } else {
+                List {
+                    ForEach(pairingStore.pairings) { pairing in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(pairing.scriptName)
+                                .font(.headline)
+                            Text(pairing.folderPath)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .onDelete { indexSet in
+                        pairingStore.pairings.remove(atOffsets: indexSet)
                     }
                 }
-                .onDelete { indexSet in
-                    indexSet.map { store.pairings[$0] }.forEach(store.remove)
-                }
+                .frame(maxHeight: 300)
             }
+
+            Divider()
 
             HStack {
-                Button("Add Pairing…") {
-                    isImportingScript = true
+                Button("Choose Folder") {
+                    showingFolderPicker = true
                 }
 
-                Spacer()
+                if let folder = selectedFolderPath {
+                    Text("📂 \(folder)")
+                        .font(.caption)
+                        .lineLimit(1)
+                } else {
+                    Text("No folder selected")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Button("Add Pairing…") {
+                print("🟡 Add Pairing tapped")
+
+                let panel = NSOpenPanel()
+                panel.allowedContentTypes = [.item]
+                panel.allowsMultipleSelection = false
+                panel.canChooseDirectories = false
+                panel.canChooseFiles = true
+                panel.title = "Choose a Script File"
+
+                if panel.runModal() == .OK, let scriptURL = panel.url {
+                    do {
+                        if scriptURL.startAccessingSecurityScopedResource() {
+                            defer { scriptURL.stopAccessingSecurityScopedResource() }
+
+                            let bookmark = try scriptURL.bookmarkData(
+                                options: [.withSecurityScope],
+                                includingResourceValuesForKeys: nil,
+                                relativeTo: nil
+                            )
+
+                            guard let folderPath = selectedFolderPath else { return }
+
+                            let pairing = ScriptPairing(
+                                scriptName: scriptURL.lastPathComponent,
+                                folderPath: folderPath,
+                                scriptBookmarkData: bookmark
+                            )
+
+                            pairingStore.pairings.append(pairing)
+                            print("✅ Access granted to: \(scriptURL.path)")
+                        } else {
+                            print("❌ Failed to access: \(scriptURL.path)")
+                        }
+                    } catch {
+                        print("❌ Script selection failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+            .disabled(selectedFolderPath == nil)
+
+            Spacer()
+        }
+        .padding(20)
+        .frame(width: 460)
+        /*
+        .fileImporter(
+            isPresented: $showingScriptImporter,
+            allowedContentTypes: [.item],
+            allowsMultipleSelection: false
+        ) { result in
+            do {
+                guard let scriptURL = try result.get().first else { return }
+
+                if scriptURL.startAccessingSecurityScopedResource() {
+                    defer { scriptURL.stopAccessingSecurityScopedResource() }
+
+                    let bookmark = try scriptURL.bookmarkData(
+                        options: [.withSecurityScope],
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+
+                    guard let folderPath = selectedFolderPath else { return }
+
+                    let pairing = ScriptPairing(
+                        scriptName: scriptURL.lastPathComponent,
+                        folderPath: folderPath,
+                        scriptBookmarkData: bookmark
+                    )
+
+                    pairingStore.pairings.append(pairing)
+                    print("✅ Access granted to: \(scriptURL.path)")
+                } else {
+                    print("❌ Failed to access: \(scriptURL.path)")
+                }
+            } catch {
+                print("❌ File import error: \(error.localizedDescription)")
             }
         }
-        .padding()
-        .frame(width: 420, height: 360)
+        */
         .fileImporter(
             isPresented: $showingFolderPicker,
             allowedContentTypes: [.folder],
             allowsMultipleSelection: false
         ) { result in
-            switch result {
-            case .success(let folderURLs):
-                selectedFolder = folderURLs.first
-                showingScriptPicker = true
-            case .failure(let error):
-                print("Folder picker failed: \(error)")
-            }
-        }
-        .fileImporter(
-            isPresented: $showingScriptPicker,
-            allowedContentTypes: [.item],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let scriptURLs):
-                if let folder = selectedFolder,
-                   let script = scriptURLs.first {
-                    store.add(folderPath: folder.path, scriptPath: script.path)
-                    selectedFolder = nil
-                }
-            case .failure(let error):
-                print("Script picker failed: \(error)")
-            }
-        }
-        .fileImporter(
-            isPresented: $isImportingScript,
-            allowedContentTypes: [.item],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let urls):
-                guard let url = urls.first else { return }
-                if url.startAccessingSecurityScopedResource() {
-                    defer { url.stopAccessingSecurityScopedResource() }
-                    scriptContext.grantedScriptURL = url
-                    print("✅ Access granted to: \(url.path)")
-                } else {
-                    print("❌ Failed to access security-scoped resource.")
-                }
-            case .failure(let error):
-                print("❌ Failed to import file: \(error.localizedDescription)")
+            do {
+                guard let folderURL = try result.get().first else { return }
+                selectedFolderPath = folderURL.path
+            } catch {
+                print("❌ Folder selection failed: \(error.localizedDescription)")
             }
         }
     }
