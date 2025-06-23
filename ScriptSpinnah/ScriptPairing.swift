@@ -1,12 +1,4 @@
 //
-//  that.swift
-//  ScriptSpinnah
-//
-//  Created by Shawn Starbird on 6/23/25.
-//
-
-
-//
 //  ScriptPairing.swift v1
 //  ScriptSpinnah
 //

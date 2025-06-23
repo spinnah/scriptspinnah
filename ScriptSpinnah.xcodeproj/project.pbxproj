@@ -10,9 +10,22 @@
 		601A5D0D2E09B1FE0041CB84 /* ScriptSpinnah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScriptSpinnah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		601A5D252E09BEE60041CB84 /* Exceptions for "ScriptSpinnah" folder in "ScriptSpinnah" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 601A5D0C2E09B1FD0041CB84 /* ScriptSpinnah */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		601A5D0F2E09B1FE0041CB84 /* ScriptSpinnah */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				601A5D252E09BEE60041CB84 /* Exceptions for "ScriptSpinnah" folder in "ScriptSpinnah" target */,
+			);
 			path = ScriptSpinnah;
 			sourceTree = "<group>";
 		};
@@ -259,6 +272,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScriptSpinnah/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -290,6 +304,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScriptSpinnah/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

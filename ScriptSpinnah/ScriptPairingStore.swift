@@ -1,12 +1,4 @@
 //
-//  to.swift
-//  ScriptSpinnah
-//
-//  Created by Shawn Starbird on 6/23/25.
-//
-
-
-//
 //  ScriptPairingStore.swift v1
 //  ScriptSpinnah
 //
@@ -17,6 +9,7 @@
 //
 
 import Foundation
+import Combine
 
 class ScriptPairingStore: ObservableObject {
     @Published var pairings: [ScriptPairing] = []

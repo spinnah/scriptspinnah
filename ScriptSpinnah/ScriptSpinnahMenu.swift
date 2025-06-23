@@ -11,17 +11,31 @@
 //
 
 import SwiftUI
+import Combine
+
+// ObservableObject to hold the shared script URL context
+class ScriptContext: ObservableObject {
+    @Published var grantedScriptURL: URL?
+}
 
 struct ScriptSpinnahMenu: View {
     @Environment(\.openWindow) private var openWindow
+    @EnvironmentObject var scriptContext: ScriptContext
 
     var body: some View {
         VStack {
             Button("Run Example Script") {
-                // Replace with real paths for testing
-                let script = "/Users/shawnstarbird/test.sh"
-                let folder = "/Users/shawnstarbird/Documents/TestFolder"
-                ScriptExecutor.run(scriptPath: script, with: folder)
+                guard let scriptURL = scriptContext.grantedScriptURL else {
+                    print("⚠️ No script URL has been granted via SettingsView.")
+                    return
+                }
+                if scriptURL.startAccessingSecurityScopedResource() {
+                    defer { scriptURL.stopAccessingSecurityScopedResource() }
+                    let folder = "/Users/shawnstarbird/Documents/GitHub/ScriptSpinnah/TestData/TestFolder"
+                    ScriptExecutor.run(scriptURL: scriptURL, with: folder)
+                } else {
+                    print("❌ Failed to access security-scoped resource")
+                }
             }
 
             Divider()
