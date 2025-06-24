@@ -1,32 +1,42 @@
 //
-//  ScriptSpinnahApp.swift v6
+//  ScriptSpinnahApp.swift v8.1
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/23/25.
+//  Created by Shawn Starbird on 6/24/25.
 //
-//  Entry point for ScriptSpinnah, a macOS menu bar app
-//  that lets users run custom scripts on selected folders.
-//  Opens the Settings window using openWindow without relying on beta-only APIs.
+//  Uses a floating glass-style panel (like Shazam/Spotlight) triggered by a menu bar icon.
 //
 
 import SwiftUI
 
-@main
 struct ScriptSpinnahApp: App {
     @StateObject private var pairingStore = ScriptPairingStore()
-    
+    @State private var isPanelVisible = false
+
     var body: some Scene {
         MenuBarExtra("ScriptSpinnah", image: "spiderweb") {
-            ScriptSpinnahMenu()
-                .environmentObject(pairingStore)
+            Text("") // Transparent placeholder
+                .padding(1)
+                .onAppear {
+                    print("💥 MenuBarExtra clicked")
+                    isPanelVisible.toggle()
+                }
         }
+
+        // Floating panel window
+        WindowGroup(id: "ScriptPanel") {
+            if isPanelVisible {
+                ScriptPanelWindow(isVisible: $isPanelVisible)
+                    .environmentObject(pairingStore)
+            }
+        }
+        .defaultSize(width: 320, height: 400)
+        .windowResizability(.contentSize)
+        .windowStyle(.plain)
 
         Window("Settings", id: "Settings") {
             SettingsView()
                 .environmentObject(pairingStore)
         }
-        .defaultSize(width: 420, height: 360)
-        .handlesExternalEvents(matching: ["settings"])
-        .commandsRemoved()
     }
 }
