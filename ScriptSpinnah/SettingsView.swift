@@ -1,13 +1,10 @@
 //
-//  SettingsView.swift v3
+//  SettingsView.swift v5
 //  ScriptSpinnah
 //
 //  Created by Shawn Starbird on 6/23/25.
 //
-//  CS-143: Add pairing UI with script bookmark storage and dynamic list rendering
-//
-//  This view allows users to pair a shell script with a folder.
-//  It persists a security-scoped bookmark for the script and lists all current pairings.
+//  CS-143/CS-150+: Add display name support and proper layout for pairing creation
 //
 
 import SwiftUI
@@ -21,6 +18,7 @@ struct SettingsView: View {
     @State private var showingFolderPicker = false
 
     @State private var selectedFolderPath: String? = nil
+    @State private var newPairingName: String = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -34,8 +32,16 @@ struct SettingsView: View {
                 List {
                     ForEach(pairingStore.pairings) { pairing in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(pairing.scriptName)
-                                .font(.headline)
+                            TextField("Name", text: Binding(
+                                get: { pairing.displayName },
+                                set: { newValue in
+                                    if let index = pairingStore.pairings.firstIndex(where: { $0.id == pairing.id }) {
+                                        pairingStore.pairings[index].displayName = newValue
+                                    }
+                                }
+                            ))
+                            .font(.headline)
+
                             Text(pairing.folderPath)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -67,6 +73,11 @@ struct SettingsView: View {
                 }
             }
 
+            // ⬇️ Moved below folder selection, above Add Pairing
+            TextField("Menu Display Name (optional)", text: $newPairingName)
+                .textFieldStyle(.roundedBorder)
+                .font(.caption)
+
             Button("Add Pairing…") {
                 print("🟡 Add Pairing tapped")
 
@@ -93,10 +104,12 @@ struct SettingsView: View {
                             let pairing = ScriptPairing(
                                 scriptName: scriptURL.lastPathComponent,
                                 folderPath: folderPath,
-                                scriptBookmarkData: bookmark
+                                scriptBookmarkData: bookmark,
+                                displayName: newPairingName
                             )
 
                             pairingStore.pairings.append(pairing)
+                            newPairingName = ""
                             print("✅ Access granted to: \(scriptURL.path)")
                         } else {
                             print("❌ Failed to access: \(scriptURL.path)")
@@ -112,42 +125,6 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(width: 460)
-        /*
-        .fileImporter(
-            isPresented: $showingScriptImporter,
-            allowedContentTypes: [.item],
-            allowsMultipleSelection: false
-        ) { result in
-            do {
-                guard let scriptURL = try result.get().first else { return }
-
-                if scriptURL.startAccessingSecurityScopedResource() {
-                    defer { scriptURL.stopAccessingSecurityScopedResource() }
-
-                    let bookmark = try scriptURL.bookmarkData(
-                        options: [.withSecurityScope],
-                        includingResourceValuesForKeys: nil,
-                        relativeTo: nil
-                    )
-
-                    guard let folderPath = selectedFolderPath else { return }
-
-                    let pairing = ScriptPairing(
-                        scriptName: scriptURL.lastPathComponent,
-                        folderPath: folderPath,
-                        scriptBookmarkData: bookmark
-                    )
-
-                    pairingStore.pairings.append(pairing)
-                    print("✅ Access granted to: \(scriptURL.path)")
-                } else {
-                    print("❌ Failed to access: \(scriptURL.path)")
-                }
-            } catch {
-                print("❌ File import error: \(error.localizedDescription)")
-            }
-        }
-        */
         .fileImporter(
             isPresented: $showingFolderPicker,
             allowedContentTypes: [.folder],

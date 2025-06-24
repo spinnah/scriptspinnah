@@ -17,11 +17,23 @@ struct ScriptPairing: Identifiable, Codable, Equatable {
     var scriptName: String
     var folderPath: String
     var scriptBookmarkData: Data
+    var displayName: String
 
-    init(scriptName: String, folderPath: String, scriptBookmarkData: Data) {
+    var effectiveDisplayName: String {
+        if !displayName.isEmpty {
+            return displayName
+        } else {
+            let baseScriptName = (scriptName as NSString).deletingPathExtension
+            let folderName = URL(fileURLWithPath: folderPath).lastPathComponent
+            return "\(baseScriptName) – \(folderName)"
+        }
+    }
+
+    init(scriptName: String, folderPath: String, scriptBookmarkData: Data, displayName: String = "") {
         self.id = UUID()
         self.scriptName = scriptName
         self.folderPath = folderPath
         self.scriptBookmarkData = scriptBookmarkData
+        self.displayName = displayName
     }
 }

@@ -20,8 +20,30 @@ struct ScriptExecutor {
         process.standardOutput = Pipe()
         process.standardError = Pipe()
 
+        let outputPipe = process.standardOutput as! Pipe
+        let errorPipe = process.standardError as! Pipe
+
+        outputPipe.fileHandleForReading.readabilityHandler = { handle in
+            if let output = String(data: handle.availableData, encoding: .utf8), !output.isEmpty {
+                print("📤 \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+            }
+        }
+
+        errorPipe.fileHandleForReading.readabilityHandler = { handle in
+            if let error = String(data: handle.availableData, encoding: .utf8), !error.isEmpty {
+                print("🛑 \(error.trimmingCharacters(in: .whitespacesAndNewlines))")
+            }
+        }
+
         do {
             try process.run()
+            process.terminationHandler = { process in
+                if process.terminationStatus == 0 {
+                    print("✅ Script completed successfully.")
+                } else {
+                    print("❌ Script exited with status code \(process.terminationStatus).")
+                }
+            }
             print("✅ Running script: \(scriptURL.path)")
             print("📂 On folder: \(folderPath)")
         } catch {

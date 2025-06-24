@@ -24,7 +24,7 @@ struct ScriptSpinnahMenu: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(pairingStore.pairings) { pairing in
-                    Button(pairing.scriptName) {
+                    Button(pairing.effectiveDisplayName) {
                         run(pairing: pairing)
                     }
                 }
