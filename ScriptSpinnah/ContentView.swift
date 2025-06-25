@@ -1,24 +1,14 @@
-//
-//  ContentView.swift
-//  ScriptSpinnah
-//
-//  Created by Shawn Starbird on 6/23/25.
-//
-
 import SwiftUI
 
-struct ContentView: View {
+struct MainContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        Text("Placeholder ContentView")
+            .frame(width: 200, height: 100)
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(12)
     }
 }
 
 #Preview {
-    ContentView()
+    MainContentView()
 }

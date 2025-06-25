@@ -13,6 +13,7 @@ import SwiftUI
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem!
     var panelWindowController: NSWindowController?
+    var pairingStore = ScriptPairingStore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create the menu bar icon
@@ -23,12 +24,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             button.action = #selector(togglePanel)
             button.target = self
         }
+        
+        // Hide the dock icon since this is a menu bar only app
+        NSApp.setActivationPolicy(.accessory)
     }
 
     @objc func togglePanel() {
         if panelWindowController == nil {
             let panelView = ScriptPanelWindow(isVisible: .constant(true))
-                .environmentObject(ScriptPairingStore())
+                .environmentObject(pairingStore)
 
             let hosting = NSHostingController(rootView: panelView)
             let panel = FloatingPanel(

@@ -59,7 +59,7 @@ struct ScriptPanelView: View {
             .frame(maxWidth: .infinity)
         }
         .padding(16)
-        .background(.ultraThinMaterial)
+        // Background material is now applied via the NSPanel in FloatingPanel.swift
         .cornerRadius(20)
         .shadow(radius: 25)
         .frame(width: 300)

@@ -14,92 +14,95 @@ struct ScriptPanelWindow: View {
     @State private var hoveredPairingID: UUID?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if pairingStore.pairings.isEmpty {
-                Text("No script pairings yet")
-                    .foregroundStyle(.secondary)
-                    .padding(.all, 16)
-            } else {
-                Text("Scripts")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 12)
-                    .padding(.horizontal, 16)
+        ZStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                if pairingStore.pairings.isEmpty {
+                    Text("No script pairings yet")
+                        .font(.body)
+                        .padding(.all, 16)
+                } else {
+                    Text("Scripts")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 16)
+                        .padding(.horizontal, 20)
 
-                ForEach(pairingStore.pairings) { pairing in
-                    let isHovering = hoveredPairingID == pairing.id
+                    ForEach(pairingStore.pairings) { pairing in
+                        Button(action: {
+                            run(pairing: pairing)
+                        }) {
+                            HStack {
+                                Text(pairing.effectiveDisplayName)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: "arrow.right.circle")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 0)
+                        }
+                        .buttonStyle(.plain)
+                        .onHover { hovering in
+                            hoveredPairingID = hovering ? pairing.id : nil
+                        }
+                    }
+                }
 
+                Divider()
+                    .padding(.vertical, 8)
+
+                VStack(spacing: 0) {
                     Button(action: {
-                        run(pairing: pairing)
+                        let settingsWindow = NSWindow(
+                            contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
+                            styleMask: [.titled, .closable, .resizable],
+                            backing: .buffered, defer: false
+                        )
+                        settingsWindow.center()
+                        settingsWindow.title = "Settings"
+                        settingsWindow.contentView = NSHostingView(
+                            rootView: SettingsView().environmentObject(pairingStore)
+                        )
+                        let controller = NSWindowController(window: settingsWindow)
+                        controller.showWindow(nil)
                     }) {
                         HStack {
-                            Text(pairing.effectiveDisplayName)
+                            Text("Open Settings")
+                                .font(.body)
                                 .foregroundStyle(.primary)
                             Spacer()
-                            Image(systemName: "arrow.right.circle")
-                                .foregroundStyle(.secondary)
                         }
                         .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.white.opacity(isHovering ? 0.08 : 0))
-                        )
+                        .padding(.horizontal, 20)
                     }
                     .buttonStyle(.plain)
-                    .onHover { hovering in
-                        hoveredPairingID = hovering ? pairing.id : nil
+
+                    Divider()
+                        .padding(.vertical, 8)
+
+                    Button(action: {
+                        NSApplication.shared.terminate(nil)
+                    }) {
+                        HStack {
+                            Text("Quit")
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 20)
                     }
+                    .buttonStyle(.plain)
                 }
             }
-
-            Divider()
-                .padding(.vertical, 8)
-
-            VStack(spacing: 8) {
-                Button(action: {
-                    let settingsWindow = NSWindow(
-                        contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
-                        styleMask: [.titled, .closable, .resizable],
-                        backing: .buffered, defer: false
-                    )
-                    settingsWindow.center()
-                    settingsWindow.title = "Settings"
-                    settingsWindow.contentView = NSHostingView(
-                        rootView: SettingsView().environmentObject(pairingStore)
-                    )
-                    let controller = NSWindowController(window: settingsWindow)
-                    controller.showWindow(nil)
-                }) {
-                    HStack {
-                        Text("Open Settings")
-                        Spacer()
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                }
-                .buttonStyle(.plain)
-
-                Button(action: {
-                    NSApplication.shared.terminate(nil)
-                }) {
-                    HStack {
-                        Text("Quit")
-                        Spacer()
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                }
-                .buttonStyle(.plain)
-            }
+            .padding(.bottom, 12)
+            .padding(.horizontal, 20)
         }
-        .padding(.bottom, 12)
-        .frame(width: 300)
-        .background(
-            VisualEffectBlur(material: .popover, blendingMode: .behindWindow)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        )
-        .shadow(radius: 30)
+        .frame(width: 320)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: Color.black.opacity(0.13), radius: 16, y: 2)
     }
 
     private func run(pairing: ScriptPairing) {
@@ -123,6 +126,12 @@ struct ScriptPanelWindow: View {
     }
 }
 
+/*
+// COMMENTED OUT: Custom VisualEffectBlur struct - not needed with macOS 26 Liquid Glass
+// The new .thinMaterial background modifier provides proper Liquid Glass effects automatically
+// This custom NSViewRepresentable was conflicting with SwiftUI's built-in material system
+// Can be restored if needed, but should use SwiftUI materials for macOS 26 compliance
+
 struct VisualEffectBlur: NSViewRepresentable {
     var material: NSVisualEffectView.Material
     var blendingMode: NSVisualEffectView.BlendingMode
@@ -142,3 +151,4 @@ struct VisualEffectBlur: NSViewRepresentable {
         nsView.state = state
     }
 }
+*/
