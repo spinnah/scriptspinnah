@@ -1,5 +1,5 @@
 //
-//  ScriptPanelWindow.swift v1
+//  ScriptPanelWindow.swift v1.4
 //  ScriptSpinnah
 //
 //  Floating translucent panel styled like macOS 26 system controls.
@@ -100,7 +100,6 @@ struct ScriptPanelWindow: View {
             .padding(.horizontal, 20)
         }
         .frame(width: 320)
-        .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: Color.black.opacity(0.13), radius: 16, y: 2)
     }
