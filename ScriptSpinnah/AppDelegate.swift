@@ -1,5 +1,5 @@
 //
-//  AppDelegate.swift v1.3
+//  AppDelegate.swift v1.4
 //  ScriptSpinnah
 //
 //  Created by Shawn Starbird on 6/24/25.
@@ -25,10 +25,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.target = self
         }
         
-        // Create the popover
+        // Create the popover with Liquid Glass styling
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 320, height: 400)
+        popover.contentSize = NSSize(width: 320, height: 200) // Start with minimum height
         popover.behavior = .transient
+        popover.appearance = NSAppearance(named: .aqua) // Force system appearance
+        
         popover.contentViewController = NSHostingController(
             rootView: ScriptPanelWindow(isVisible: .constant(true))
                 .environmentObject(pairingStore)
