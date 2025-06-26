@@ -1,10 +1,8 @@
 //
-//  SettingsView.swift
-//  v6.0
+//  SettingsView.swift v0.20250626-144700
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 2025-06-25
-//  CS-151: Native +/- button design with inline editing
+//  CS-151: Add selection state and confirmation deletion
 //
 
 import SwiftUI
@@ -16,6 +14,14 @@ struct SettingsView: View {
     @State private var editingSection: UUID? = nil
     @State private var editingSectionName: String = ""
     @State private var editingSectionIcon: String = "folder.circle.fill"
+    
+    // Selection states
+    @State private var selectedSectionID: UUID? = nil
+    @State private var selectedPairingID: UUID? = nil
+    
+    // Confirmation alerts
+    @State private var showingSectionDeleteAlert = false
+    @State private var showingPairingDeleteAlert = false
 
     // Common SF Symbols for sections
     private let availableIcons = [
@@ -43,7 +49,7 @@ struct SettingsView: View {
                 Text("Menu Sections")
                     .font(.headline)
                 
-                List {
+                List(selection: $selectedSectionID) {
                     ForEach(pairingStore.sections) { section in
                         HStack {
                             if editingSection == section.id {
@@ -86,6 +92,7 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                        .tag(section.id)
                         .onTapGesture {
                             if section.name != "General" && editingSection != section.id {
                                 editingSection = section.id
@@ -116,6 +123,7 @@ struct SettingsView: View {
                         editingSection = newSection.id
                         editingSectionName = newSection.name
                         editingSectionIcon = newSection.iconName
+                        selectedSectionID = newSection.id
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 12, weight: .medium))
@@ -124,14 +132,19 @@ struct SettingsView: View {
                     .frame(width: 20, height: 20)
                     
                     Button(action: {
-                        // Remove selected section (implement selection if needed)
+                        if let selectedID = selectedSectionID,
+                           let section = pairingStore.sections.first(where: { $0.id == selectedID }),
+                           section.name != "General" {
+                            showingSectionDeleteAlert = true
+                        }
                     }) {
                         Image(systemName: "minus")
                             .font(.system(size: 12, weight: .medium))
                     }
                     .buttonStyle(.borderless)
                     .frame(width: 20, height: 20)
-                    .disabled(true) // For now
+                    .disabled(selectedSectionID == nil ||
+                             pairingStore.sections.first(where: { $0.id == selectedSectionID })?.name == "General")
                     
                     Spacer()
                 }
@@ -143,7 +156,7 @@ struct SettingsView: View {
                 Text("Configured Pairings")
                     .font(.headline)
                 
-                List {
+                List(selection: $selectedPairingID) {
                     if pairingStore.pairings.isEmpty {
                         Text("No script pairings yet. Click + to add one.")
                             .foregroundStyle(.secondary)
@@ -157,6 +170,10 @@ struct SettingsView: View {
                                     .foregroundStyle(.secondary)
                             }
                             .padding(.vertical, 2)
+                            .tag(pairing.id)
+                        }
+                        .onDelete { indexSet in
+                            pairingStore.pairings.remove(atOffsets: indexSet)
                         }
                     }
                 }
@@ -166,6 +183,7 @@ struct SettingsView: View {
                 HStack {
                     Button(action: {
                         // TODO: Add pairing functionality
+                        print("Add pairing clicked")
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 12, weight: .medium))
@@ -174,14 +192,16 @@ struct SettingsView: View {
                     .frame(width: 20, height: 20)
                     
                     Button(action: {
-                        // Remove selected pairing
+                        if selectedPairingID != nil {
+                            showingPairingDeleteAlert = true
+                        }
                     }) {
                         Image(systemName: "minus")
                             .font(.system(size: 12, weight: .medium))
                     }
                     .buttonStyle(.borderless)
                     .frame(width: 20, height: 20)
-                    .disabled(true) // For now
+                    .disabled(selectedPairingID == nil)
                     
                     Spacer()
                 }
@@ -204,7 +224,37 @@ struct SettingsView: View {
         .frame(minWidth: 500)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxHeight: 600)
-        .background(.thinMaterial)  // More translucent
+        .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .alert("Delete Section", isPresented: $showingSectionDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                if let selectedID = selectedSectionID,
+                   let section = pairingStore.sections.first(where: { $0.id == selectedID }) {
+                    pairingStore.removeSection(section)
+                    selectedSectionID = nil
+                }
+            }
+        } message: {
+            if let selectedID = selectedSectionID,
+               let section = pairingStore.sections.first(where: { $0.id == selectedID }) {
+                Text("Are you sure you want to delete '\(section.name)'? Any pairings in this section will be moved to General.")
+            }
+        }
+        .alert("Delete Pairing", isPresented: $showingPairingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                if let selectedID = selectedPairingID,
+                   let index = pairingStore.pairings.firstIndex(where: { $0.id == selectedID }) {
+                    pairingStore.pairings.remove(at: index)
+                    selectedPairingID = nil
+                }
+            }
+        } message: {
+            if let selectedID = selectedPairingID,
+               let pairing = pairingStore.pairings.first(where: { $0.id == selectedID }) {
+                Text("Are you sure you want to delete '\(pairing.effectiveDisplayName)'?")
+            }
+        }
     }
 }

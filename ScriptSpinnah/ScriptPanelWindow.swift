@@ -1,8 +1,8 @@
 //
-//  ScriptPanelWindow.swift v3
+//  ScriptPanelWindow.swift v0.20250626-144700
 //  ScriptSpinnah
 //
-//  CS-151: Fix sections to always show, even when empty
+//  CS-151: Use custom SettingsWindow for proper keyboard focus
 //
 //  Floating translucent panel styled like macOS 26 system controls.
 //
@@ -106,17 +106,11 @@ struct ScriptPanelWindow: View {
                 // Settings and Quit section
                 VStack(spacing: 0) {
                     Button(action: {
-                        let settingsWindow = NSWindow(
+                        let settingsWindow = SettingsWindow(
                             contentRect: NSRect(x: 0, y: 0, width: 500, height: 100),
                             styleMask: [.borderless],
                             backing: .buffered, defer: false
                         )
-                        settingsWindow.center()
-                        settingsWindow.isOpaque = false
-                        settingsWindow.backgroundColor = .clear
-                        settingsWindow.hasShadow = true
-                        settingsWindow.level = .floating
-                        settingsWindow.collectionBehavior = [.canJoinAllSpaces, .transient]
                         
                         let hostingView = NSHostingView(
                             rootView: SettingsView().environmentObject(pairingStore)
@@ -131,6 +125,7 @@ struct ScriptPanelWindow: View {
                         
                         let controller = NSWindowController(window: settingsWindow)
                         controller.showWindow(nil)
+                        settingsWindow.makeKeyAndOrderFront(nil)
                         NSApp.activate(ignoringOtherApps: true)
                     }) {
                         HStack(spacing: 12) {
