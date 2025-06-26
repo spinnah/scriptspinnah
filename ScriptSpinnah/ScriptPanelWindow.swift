@@ -1,6 +1,8 @@
 //
-//  ScriptPanelWindow.swift v1.4
+//  ScriptPanelWindow.swift v3
 //  ScriptSpinnah
+//
+//  CS-151: Fix sections to always show, even when empty
 //
 //  Floating translucent panel styled like macOS 26 system controls.
 //
@@ -16,59 +18,132 @@ struct ScriptPanelWindow: View {
     var body: some View {
         ZStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 0) {
-                if pairingStore.pairings.isEmpty {
-                    Text("No script pairings yet")
+                if pairingStore.sections.isEmpty {
+                    Text("No sections yet")
                         .font(.body)
+                        .foregroundStyle(.secondary)
                         .padding(.all, 16)
                 } else {
-                    Text("Scripts")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 16)
-                        .padding(.horizontal, 20)
-
-                    ForEach(pairingStore.pairings) { pairing in
-                        Button(action: {
-                            run(pairing: pairing)
-                        }) {
-                            HStack {
-                                Text(pairing.effectiveDisplayName)
-                                    .font(.body)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                Image(systemName: "arrow.right.circle")
-                                    .foregroundStyle(.secondary)
+                    // Script sections - always show sections, even if empty
+                    ForEach(pairingStore.sections) { section in
+                        let sectionPairings = pairingStore.pairings.filter { $0.sectionName == section.name }
+                        
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Section header
+                            Button(action: {
+                                pairingStore.toggleSectionCollapse(section)
+                            }) {
+                                HStack(spacing: 12) {
+                                    // Icon in circle
+                                    ZStack {
+                                        Circle()
+                                            .fill(.tertiary)
+                                            .frame(width: 28, height: 28)
+                                        Image(systemName: section.iconName)
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundStyle(.primary)
+                                    }
+                                    
+                                    Text(section.name)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: section.isCollapsed ? "chevron.right" : "chevron.down")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 0)
-                        }
-                        .buttonStyle(.plain)
-                        .onHover { hovering in
-                            hoveredPairingID = hovering ? pairing.id : nil
+                            .buttonStyle(.plain)
+                            
+                            // Section content
+                            if !section.isCollapsed {
+                                if sectionPairings.isEmpty {
+                                    Text("No scripts in this section")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .padding(.leading, 52)
+                                        .padding(.trailing, 20)
+                                        .padding(.vertical, 4)
+                                } else {
+                                    ForEach(sectionPairings) { pairing in
+                                        Button(action: {
+                                            run(pairing: pairing)
+                                        }) {
+                                            HStack {
+                                                Text(pairing.effectiveDisplayName)
+                                                    .font(.body)
+                                                    .foregroundStyle(.primary)
+                                                Spacer()
+                                                Image(systemName: "arrow.right.circle")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                            .padding(.vertical, 6)
+                                            .padding(.leading, 52) // Indent under icon
+                                            .padding(.trailing, 20)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .background(
+                                            hoveredPairingID == pairing.id ?
+                                            Color.accentColor.opacity(0.08) : Color.clear
+                                        )
+                                        .onHover { hovering in
+                                            hoveredPairingID = hovering ? pairing.id : nil
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
                 Divider()
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 12)
 
+                // Settings and Quit section
                 VStack(spacing: 0) {
                     Button(action: {
                         let settingsWindow = NSWindow(
-                            contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
-                            styleMask: [.titled, .closable, .resizable],
+                            contentRect: NSRect(x: 0, y: 0, width: 500, height: 100),
+                            styleMask: [.borderless],
                             backing: .buffered, defer: false
                         )
                         settingsWindow.center()
-                        settingsWindow.title = "Settings"
-                        settingsWindow.contentView = NSHostingView(
+                        settingsWindow.isOpaque = false
+                        settingsWindow.backgroundColor = .clear
+                        settingsWindow.hasShadow = true
+                        settingsWindow.level = .floating
+                        settingsWindow.collectionBehavior = [.canJoinAllSpaces, .transient]
+                        
+                        let hostingView = NSHostingView(
                             rootView: SettingsView().environmentObject(pairingStore)
                         )
+                        settingsWindow.contentView = hostingView
+                        
+                        // Auto-size the window to fit content
+                        hostingView.translatesAutoresizingMaskIntoConstraints = false
+                        let size = hostingView.fittingSize
+                        settingsWindow.setContentSize(size)
+                        settingsWindow.center()
+                        
                         let controller = NSWindowController(window: settingsWindow)
                         controller.showWindow(nil)
+                        NSApp.activate(ignoringOtherApps: true)
                     }) {
-                        HStack {
-                            Text("Open Settings")
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(.tertiary)
+                                    .frame(width: 28, height: 28)
+                                Image(systemName: "gear")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(.primary)
+                            }
+                            
+                            Text("Settings")
                                 .font(.body)
                                 .foregroundStyle(.primary)
                             Spacer()
@@ -78,13 +153,19 @@ struct ScriptPanelWindow: View {
                     }
                     .buttonStyle(.plain)
 
-                    Divider()
-                        .padding(.vertical, 8)
-
                     Button(action: {
                         NSApplication.shared.terminate(nil)
                     }) {
-                        HStack {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(.tertiary)
+                                    .frame(width: 28, height: 28)
+                                Image(systemName: "power")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(.primary)
+                            }
+                            
                             Text("Quit")
                                 .font(.body)
                                 .foregroundStyle(.primary)
@@ -96,10 +177,10 @@ struct ScriptPanelWindow: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.bottom, 12)
-            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
         .frame(width: 320)
+        .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: Color.black.opacity(0.13), radius: 16, y: 2)
     }
@@ -124,30 +205,3 @@ struct ScriptPanelWindow: View {
         }
     }
 }
-
-/*
-// COMMENTED OUT: Custom VisualEffectBlur struct - not needed with macOS 26 Liquid Glass
-// The new .thinMaterial background modifier provides proper Liquid Glass effects automatically
-// This custom NSViewRepresentable was conflicting with SwiftUI's built-in material system
-// Can be restored if needed, but should use SwiftUI materials for macOS 26 compliance
-
-struct VisualEffectBlur: NSViewRepresentable {
-    var material: NSVisualEffectView.Material
-    var blendingMode: NSVisualEffectView.BlendingMode
-    var state: NSVisualEffectView.State = .active
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blendingMode
-        view.state = state
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-        nsView.blendingMode = blendingMode
-        nsView.state = state
-    }
-}
-*/

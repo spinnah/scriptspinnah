@@ -1,13 +1,13 @@
 //
-//  ScriptPairing.swift v2
+//  ScriptPairing.swift v3
 //  ScriptSpinnah
 //
 //  Created by Shawn Starbird on 6/23/25.
 //
-//  CS-143: Add bookmark-based script/folder pairing model
+//  CS-151: Add section support for organizing pairings
 //
 //  Represents a pairing between a shell script and a target folder.
-//  Stores script name, folder path, and bookmark data for the script.
+//  Stores script name, folder path, bookmark data, and section information.
 //
 
 import Foundation
@@ -18,6 +18,7 @@ struct ScriptPairing: Identifiable, Codable, Equatable {
     var folderPath: String
     var scriptBookmarkData: Data
     var displayName: String
+    var sectionName: String // New property for section organization
 
     var effectiveDisplayName: String {
         if !displayName.isEmpty {
@@ -29,11 +30,12 @@ struct ScriptPairing: Identifiable, Codable, Equatable {
         }
     }
 
-    init(scriptName: String, folderPath: String, scriptBookmarkData: Data, displayName: String = "") {
+    init(scriptName: String, folderPath: String, scriptBookmarkData: Data, displayName: String = "", sectionName: String = "General") {
         self.id = UUID()
         self.scriptName = scriptName
         self.folderPath = folderPath
         self.scriptBookmarkData = scriptBookmarkData
         self.displayName = displayName
+        self.sectionName = sectionName
     }
 }

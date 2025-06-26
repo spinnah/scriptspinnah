@@ -1,141 +1,210 @@
 //
-//  SettingsView.swift v5
+//  SettingsView.swift
+//  v6.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/23/25.
-//
-//  CS-143/CS-150+: Add display name support and proper layout for pairing creation
+//  Created by Shawn Starbird on 2025-06-25
+//  CS-151: Native +/- button design with inline editing
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
-import AppKit
 
 struct SettingsView: View {
     @EnvironmentObject var pairingStore: ScriptPairingStore
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var editingSection: UUID? = nil
+    @State private var editingSectionName: String = ""
+    @State private var editingSectionIcon: String = "folder.circle.fill"
 
-    @State private var showingScriptImporter = false
-    @State private var showingFolderPicker = false
-
-    @State private var selectedFolderPath: String? = nil
-    @State private var newPairingName: String = ""
+    // Common SF Symbols for sections
+    private let availableIcons = [
+        ("folder.circle.fill", "General"),
+        ("book.circle.fill", "Books/Comics"),
+        ("briefcase.circle.fill", "Productivity"),
+        ("photo.circle.fill", "Media"),
+        ("terminal.fill", "Development"),
+        ("wrench.and.screwdriver.fill", "Tools"),
+        ("gamecontroller.fill", "Games"),
+        ("music.note", "Audio"),
+        ("video.circle.fill", "Video"),
+        ("doc.circle.fill", "Documents")
+    ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Script Pairings")
-                .font(.title2.bold())
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Settings")
+                .font(.title)
+                .fontWeight(.semibold)
+                .padding(.top, 20)
 
-            if pairingStore.pairings.isEmpty {
-                Text("No pairings yet. Add one below.")
-                    .foregroundStyle(.secondary)
-            } else {
+            // Menu Sections
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Menu Sections")
+                    .font(.headline)
+                
                 List {
-                    ForEach(pairingStore.pairings) { pairing in
-                        VStack(alignment: .leading, spacing: 4) {
-                            TextField("Name", text: Binding(
-                                get: { pairing.displayName },
-                                set: { newValue in
-                                    if let index = pairingStore.pairings.firstIndex(where: { $0.id == pairing.id }) {
-                                        pairingStore.pairings[index].displayName = newValue
+                    ForEach(pairingStore.sections) { section in
+                        HStack {
+                            if editingSection == section.id {
+                                // Editing mode
+                                Picker("", selection: $editingSectionIcon) {
+                                    ForEach(availableIcons, id: \.0) { iconName, description in
+                                        Image(systemName: iconName).tag(iconName)
                                     }
                                 }
-                            ))
-                            .font(.headline)
-
-                            Text(pairing.folderPath)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .pickerStyle(.menu)
+                                .frame(width: 40)
+                                
+                                TextField("Section Name", text: $editingSectionName)
+                                    .textFieldStyle(.roundedBorder)
+                                    .onSubmit {
+                                        if let index = pairingStore.sections.firstIndex(where: { $0.id == section.id }) {
+                                            pairingStore.sections[index].name = editingSectionName
+                                            pairingStore.sections[index].iconName = editingSectionIcon
+                                        }
+                                        editingSection = nil
+                                    }
+                            } else {
+                                // Display mode
+                                Image(systemName: section.iconName)
+                                    .foregroundStyle(.primary)
+                                    .frame(width: 20)
+                                
+                                Text(section.name)
+                                
+                                Spacer()
+                                
+                                if section.name == "General" {
+                                    Text("Default")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 1)
+                                        .background(.quaternary)
+                                        .clipShape(Capsule())
+                                }
+                            }
                         }
-                        .padding(.vertical, 4)
+                        .onTapGesture {
+                            if section.name != "General" && editingSection != section.id {
+                                editingSection = section.id
+                                editingSectionName = section.name
+                                editingSectionIcon = section.iconName
+                            }
+                        }
                     }
                     .onDelete { indexSet in
-                        pairingStore.pairings.remove(atOffsets: indexSet)
-                    }
-                }
-                .frame(maxHeight: 300)
-            }
-
-            Divider()
-
-            HStack {
-                Button("Choose Folder") {
-                    showingFolderPicker = true
-                }
-
-                if let folder = selectedFolderPath {
-                    Text("📂 \(folder)")
-                        .font(.caption)
-                        .lineLimit(1)
-                } else {
-                    Text("No folder selected")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // ⬇️ Moved below folder selection, above Add Pairing
-            TextField("Menu Display Name (optional)", text: $newPairingName)
-                .textFieldStyle(.roundedBorder)
-                .font(.caption)
-
-            Button("Add Pairing…") {
-                print("🟡 Add Pairing tapped")
-
-                let panel = NSOpenPanel()
-                panel.allowedContentTypes = [.item]
-                panel.allowsMultipleSelection = false
-                panel.canChooseDirectories = false
-                panel.canChooseFiles = true
-                panel.title = "Choose a Script File"
-
-                if panel.runModal() == .OK, let scriptURL = panel.url {
-                    do {
-                        if scriptURL.startAccessingSecurityScopedResource() {
-                            defer { scriptURL.stopAccessingSecurityScopedResource() }
-
-                            let bookmark = try scriptURL.bookmarkData(
-                                options: [.withSecurityScope],
-                                includingResourceValuesForKeys: nil,
-                                relativeTo: nil
-                            )
-
-                            guard let folderPath = selectedFolderPath else { return }
-
-                            let pairing = ScriptPairing(
-                                scriptName: scriptURL.lastPathComponent,
-                                folderPath: folderPath,
-                                scriptBookmarkData: bookmark,
-                                displayName: newPairingName
-                            )
-
-                            pairingStore.pairings.append(pairing)
-                            newPairingName = ""
-                            print("✅ Access granted to: \(scriptURL.path)")
-                        } else {
-                            print("❌ Failed to access: \(scriptURL.path)")
+                        for index in indexSet {
+                            let section = pairingStore.sections[index]
+                            if section.name != "General" {
+                                pairingStore.removeSection(section)
+                            }
                         }
-                    } catch {
-                        print("❌ Script selection failed: \(error.localizedDescription)")
                     }
                 }
+                .frame(height: min(200, max(100, CGFloat(pairingStore.sections.count * 35 + 40))))
+                
+                // +/- buttons
+                HStack {
+                    Button(action: {
+                        let newSection = ScriptSection(
+                            name: "New Section",
+                            iconName: "folder.circle.fill"
+                        )
+                        pairingStore.addSection(newSection)
+                        editingSection = newSection.id
+                        editingSectionName = newSection.name
+                        editingSectionIcon = newSection.iconName
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 20, height: 20)
+                    
+                    Button(action: {
+                        // Remove selected section (implement selection if needed)
+                    }) {
+                        Image(systemName: "minus")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 20, height: 20)
+                    .disabled(true) // For now
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 4)
             }
-            .disabled(selectedFolderPath == nil)
 
-            Spacer()
-        }
-        .padding(20)
-        .frame(width: 460)
-        .fileImporter(
-            isPresented: $showingFolderPicker,
-            allowedContentTypes: [.folder],
-            allowsMultipleSelection: false
-        ) { result in
-            do {
-                guard let folderURL = try result.get().first else { return }
-                selectedFolderPath = folderURL.path
-            } catch {
-                print("❌ Folder selection failed: \(error.localizedDescription)")
+            // Configured Pairings
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Configured Pairings")
+                    .font(.headline)
+                
+                List {
+                    if pairingStore.pairings.isEmpty {
+                        Text("No script pairings yet. Click + to add one.")
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 8)
+                    } else {
+                        ForEach(pairingStore.pairings) { pairing in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(pairing.effectiveDisplayName)
+                                Text("Section: \(pairing.sectionName)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+                .frame(height: min(150, max(60, CGFloat(max(1, pairingStore.pairings.count) * 35 + 20))))
+                
+                // +/- buttons for pairings
+                HStack {
+                    Button(action: {
+                        // TODO: Add pairing functionality
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 20, height: 20)
+                    
+                    Button(action: {
+                        // Remove selected pairing
+                    }) {
+                        Image(systemName: "minus")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 20, height: 20)
+                    .disabled(true) // For now
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 4)
             }
+            
+            Spacer()
+            
+            // Done button at bottom
+            HStack {
+                Spacer()
+                Button("Done") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding(.bottom, 20)
         }
+        .padding(.horizontal, 20)
+        .frame(minWidth: 500)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxHeight: 600)
+        .background(.thinMaterial)  // More translucent
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
