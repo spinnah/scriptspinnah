@@ -1,24 +1,28 @@
 //
-//  ScriptPairingStore.swift v2
+//  ScriptPairingStore.swift v1.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/23/25.
+//  Created by ShastLeLow on 2025-06-26.
 //
-//  CS-151: Add section management alongside pairing management
-//
-//  ObservableObject class to manage script pairings and sections,
-//  using UserDefaults for persistence across app launches.
+//  Persistent data store for script pairings and menu sections.
+//  Manages UserDefaults persistence with automatic saving on data changes.
 //
 
 import Foundation
 import Combine
 
 class ScriptPairingStore: ObservableObject {
-    @Published var pairings: [ScriptPairing] = []
-    @Published var sections: [ScriptSection] = []
+    @Published var pairings: [ScriptPairing] = [] {
+        didSet { save() }
+    }
+    
+    @Published var sections: [ScriptSection] = [] {
+        didSet { save() }
+    }
 
     private let pairingsStorageKey = "ScriptPairings"
     private let sectionsStorageKey = "ScriptSections"
+    private var isLoading = false // Prevent save during initial load
 
     init() {
         load()
@@ -32,17 +36,14 @@ class ScriptPairingStore: ObservableObject {
             sectionName: sectionName
         )
         pairings.append(newPairing)
-        save()
     }
 
     func remove(_ pairing: ScriptPairing) {
         pairings.removeAll { $0.id == pairing.id }
-        save()
     }
     
     func addSection(_ section: ScriptSection) {
         sections.append(section)
-        save()
     }
     
     func removeSection(_ section: ScriptSection) {
@@ -53,17 +54,17 @@ class ScriptPairingStore: ObservableObject {
             }
         }
         sections.removeAll { $0.id == section.id }
-        save()
     }
     
     func toggleSectionCollapse(_ section: ScriptSection) {
         if let index = sections.firstIndex(where: { $0.id == section.id }) {
             sections[index].isCollapsed.toggle()
-            save()
         }
     }
 
     private func load() {
+        isLoading = true
+        
         // Load pairings
         if let pairingsData = UserDefaults.standard.data(forKey: pairingsStorageKey),
            let decodedPairings = try? JSONDecoder().decode([ScriptPairing].self, from: pairingsData) {
@@ -79,9 +80,14 @@ class ScriptPairingStore: ObservableObject {
         } else {
             sections = ScriptSection.defaultSections
         }
+        
+        isLoading = false
     }
 
     private func save() {
+        // Don't save during initial loading
+        guard !isLoading else { return }
+        
         // Save pairings
         if let pairingsData = try? JSONEncoder().encode(pairings) {
             UserDefaults.standard.set(pairingsData, forKey: pairingsStorageKey)

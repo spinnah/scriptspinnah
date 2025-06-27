@@ -1,0 +1,34 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "srgb:0.46202,0.83828,1.00000,1.00000",
+      "srgb:0.00000,0.32852,0.57488,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill" : "automatic",
+          "image-name" : "ScriptSpinnahGlyphWhite-AppIcon.png",
+          "name" : "ScriptSpinnahGlyphWhite-AppIcon"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

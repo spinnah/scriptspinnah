@@ -1,13 +1,11 @@
 //
-//  ScriptPairing.swift v3
+//  ScriptPairing.swift v1.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/23/25.
+//  Created by ShastLeLow on 2025-06-26.
 //
-//  CS-151: Add section support for organizing pairings
-//
-//  Represents a pairing between a shell script and a target folder.
-//  Stores script name, folder path, bookmark data, and section information.
+//  Data model representing a script-folder pairing.
+//  Stores script bookmarks, target paths, display names, and section organization.
 //
 
 import Foundation

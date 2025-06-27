@@ -1,8 +1,11 @@
 //
-//  PairingCreationSheet.swift v0.20250626-145400
+//  PairingCreationSheet.swift v1.0
 //  ScriptSpinnah
 //
-//  Pairing creation sheet with native macOS styling
+//  Created by ShastLeLow on 2025-06-26.
+//
+//  Native macOS sheet for creating script-folder pairings.
+//  Handles file selection, section assignment, and security-scoped bookmark creation.
 //
 
 import SwiftUI

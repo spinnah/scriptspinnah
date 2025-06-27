@@ -1,10 +1,11 @@
 //
-//  VisualEffectView.swift
-//  v1.0
+//  VisualEffectView.swift v1.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 2025-06-25
-//  Wraps NSVisualEffectView for macOS-style translucent backgrounds.
+//  Created by ShastLeLow on 2025-06-26.
+//
+//  NSViewRepresentable wrapper for NSVisualEffectView.
+//  Provides native macOS translucent background materials in SwiftUI.
 //
 
 import SwiftUI

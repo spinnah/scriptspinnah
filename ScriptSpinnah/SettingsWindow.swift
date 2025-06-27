@@ -1,8 +1,11 @@
 //
-//  SettingsWindow.swift v0.20250626-144500
+//  SettingsWindow.swift v1.0
 //  ScriptSpinnah
 //
-//  Custom borderless window that can become key for text input
+//  Created by ShastLeLow on 2025-06-26.
+//
+//  Custom borderless window that accepts keyboard focus for text input.
+//  Enables proper text field functionality in floating, borderless panels.
 //
 
 import AppKit
