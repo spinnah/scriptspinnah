@@ -1,10 +1,11 @@
 //
-//  ScriptSpinnahApp.swift v1
+//  ScriptSpinnahApp.swift v1.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/24/25.
+//  Created by ShastLeLow on 2025-06-26.
 //
-//  Main app structure for macOS 26 Tahoe with proper SwiftUI App lifecycle
+//  Main SwiftUI app entry point for menu bar-only operation.
+//  Configures AppDelegate and shared data store for macOS 26 Tahoe.
 //
 
 import SwiftUI

@@ -1,10 +1,11 @@
 //
-//  ScriptPanelWindow.swift v0.20250626-144700
+//  ScriptPanelWindow.swift v1.0
 //  ScriptSpinnah
 //
-//  CS-151: Use custom SettingsWindow for proper keyboard focus
+//  Created by ShastLeLow on 2025-06-26.
 //
-//  Floating translucent panel styled like macOS 26 system controls.
+//  Main popover panel UI with collapsible sections and Liquid Glass styling.
+//  Displays organized script pairings with Settings/Quit controls.
 //
 
 import SwiftUI

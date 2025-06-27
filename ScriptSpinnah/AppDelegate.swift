@@ -1,11 +1,13 @@
 //
-//  AppDelegate.swift v1.4
+//  AppDelegate.swift v1.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/24/25.
+//  Created by ShastLeLow on 2025-06-26.
 //
-//  Controls the menu bar icon and shows NSPopover with Liquid Glass styling.
+//  Controls the menu bar icon and displays the floating script panel.
+//  Manages the app lifecycle for menu bar-only operation with Liquid Glass UI.
 //
+
 
 import Cocoa
 import SwiftUI

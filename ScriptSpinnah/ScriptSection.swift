@@ -1,12 +1,11 @@
 //
-//  ScriptSection.swift v1
+//  ScriptSection.swift v1.0
 //  ScriptSpinnah
 //
-//  Created by Shawn Starbird on 6/24/25.
+//  Created by ShastLeLow on 2025-06-26.
 //
-//  CS-151: Section model for organizing script pairings with icons
-//
-//  Represents a collapsible section in the menu with an SF Symbol icon
+//  Data model for collapsible menu sections with SF Symbol icons.
+//  Organizes script pairings into categorized, expandable groups.
 //
 
 import Foundation

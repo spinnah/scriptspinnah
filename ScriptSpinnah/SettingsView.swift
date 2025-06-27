@@ -1,8 +1,11 @@
 //
-//  SettingsView.swift v0.20250626-145400
+//  SettingsView.swift v1.0
 //  ScriptSpinnah
 //
-//  CS-151: Extract PairingCreationSheet to separate file
+//  Created by ShastLeLow on 2025-06-26.
+//
+//  Main settings window with native +/- controls for sections and pairings.
+//  Handles inline editing, selection states, deletion confirmations, and pairing creation.
 //
 
 import SwiftUI
