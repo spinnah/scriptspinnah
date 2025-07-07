@@ -1,0 +1,39 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "extended-srgb:1.00000,0.80000,0.00000,1.00000",
+      "display-p3:0.59660,0.19401,0.13320,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "spinnah-logo.png",
+          "name" : "spinnah-logo",
+          "position" : {
+            "scale" : 0.43,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
